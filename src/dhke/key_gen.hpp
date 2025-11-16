@@ -80,11 +80,6 @@ private:
     }
 
 public:
-    // SecretKeyGenerator()
-    // {
-    //     ;
-    // }
-
     /**
      * The methodology this function uses is to continuously generate a random integer of a specified BIT length,
      * check if it's prime using the Miller-Rabin primality test, and continue until a prime number is found.
@@ -95,17 +90,19 @@ public:
     static boost::multiprecision::cpp_int getPrimeNumber(size_t bitLength = 64)
     {
         boost::multiprecision::cpp_int candidateValue;
+        int numbersTested = 0;
 
         while (true)
         {
             // get candidate prime number (NOT yet determined if actually prime)
             candidateValue = getCandidateNumber(bitLength);
+            numbersTested++;
             // from the Boost docs, 25 trials is recommended:
             //  https://www.boost.org/doc/libs/latest/libs/multiprecision/doc/html/boost_multiprecision/tut/primetest.html
             if (boost::multiprecision::miller_rabin_test(candidateValue, 25))
                 break;
         }
-        spdlog::info("[SecretKeyGenerator::getPrimeNumber] prime number generated: {}", candidateValue.str());
+        spdlog::info("[SecretKeyGenerator::getPrimeNumber] Numbers tested: {} - Prime number generated: {}", numbersTested, candidateValue.str());
         return candidateValue;
     }
 };
