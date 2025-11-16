@@ -1,10 +1,11 @@
 {
-  "name": "cpp-skeleton",
+  "name": "diffie-hellman-key-exchange",
   "version-string": "0.1.0",
   "dependencies": [
     "asio",
     "spdlog",
     "nlohmann-json",
-    "doctest"
+    "doctest",
+    "boost-multiprecision"
   ]
 }
