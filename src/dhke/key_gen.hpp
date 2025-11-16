@@ -1,6 +1,10 @@
 #ifndef KEY_GEN
 #define KEY_GEN
 
+/* C++ standard <random> library requires a seed source (i.e. random device),
+    a pseudo-RNG algorithm (i.e. mt19937 for 64 bit),
+    and a desired distribution to map the RNG output to (i.e. uniform, can also be normal, binomial)
+*/
 #include <random>
 #include <limits>
 // the Boost 'multiprecision' library helps with handling numbers of size >64 bits cross-platform
@@ -10,15 +14,13 @@
 #include <spdlog/spdlog.h>
 
 /**
- * Handles functionality related to generating a secret key for participants of the DHKE
+ * Handles functionality related to obtaining values related to key generation for the DHKE
  */
-class SecretKeyGenerator
+class KeyGenerator
 {
 private:
-    // int generatorNumber_;
-
     /**
-     * Generate a random number of a set bit size, intended to be used for generating candidate prime numbers
+     * Get a random number of a set bit size, intended to be used for generating candidate prime numbers
      *
      * @param bitLength (DEFAULT: 64) The desired BIT (not digit) length of the generated prime number (e.g. 64 bit, 128 bit, 256 bit)
      * @returns boost::multiprecision::cpp_int An integer of the specified bit length
@@ -28,15 +30,12 @@ private:
         if (bitLength == 0)
             throw std::invalid_argument("bitLength must be >= 1");
 
-        /* C++ standard <random> library requires a seed source (i.e. random device),
-            a pseudo-RNG algorithm (i.e. mt19937 for 64 bit),
-            and a desired distribution to map the RNG output to (i.e. uniform, can also be normal, binomial)
-        */
+        // set up random number generation
         std::random_device rd;
         std::mt19937_64 randIntGenerator(rd());
         std::uniform_int_distribution<std::uint64_t> randDistribution(0, std::numeric_limits<std::uint64_t>::max());
 
-        // because C++ natively deals with int sizes less than 64 bit, we break the random number generation up into
+        // C++ natively deals with int sizes less than 64 bit, so we break the random number generation up into
         //      64 bit chunks and 'stitch' the number together later
         constexpr std::size_t bitsPerChunk = 64;
         /* because C++ int division truncates (i.e. 11/4 would return 2) we need to ensure we have more than enough
@@ -104,6 +103,62 @@ public:
         }
         spdlog::info("[SecretKeyGenerator::getPrimeNumber] Numbers tested: {} - Prime number generated: {}", numbersTested, candidateValue.str());
         return candidateValue;
+    }
+
+    /**
+     * Generate a large random integer between a set range.
+     *
+     * NOTE FOR MARKERS: more thorough explanation comments for the logic can be found in the getCandidateNumber
+     * source code above. The logic is mostly the same across the two methods.
+     *
+     * @param lower The lower bound for RNG, cannot be <2
+     * @param upper The upper bound for RNG
+     * @returns boost::multiprecision::cpp_int A random integer
+     */
+    static boost::multiprecision::cpp_int getLargeRandomInt(size_t lower, size_t upper)
+    {
+        if (lower > 2)
+            throw std::invalid_argument("Argument 'lower' must be >= 2");
+
+        // set up random number generation
+        std::random_device rd;
+        std::mt19937_64 randIntGenerator(rd());
+        std::uniform_int_distribution<std::uint64_t> randDistribution(0, std::numeric_limits<std::uint64_t>::max());
+
+        // determine random digit size target
+        std::uniform_int_distribution<std::uint64_t> randLengthDist(lower, upper);
+        size_t valueLength = randLengthDist(randIntGenerator);
+
+        // chunk sizing
+        constexpr std::size_t bitsPerChunk = 64;
+
+        std::size_t chunks = (valueLength + bitsPerChunk - 1) / bitsPerChunk;
+
+        boost::multiprecision::cpp_int generatedValue = 0;
+
+        // build number from bit chunks
+        for (std::size_t i = 0; i < chunks; i++)
+        {
+            generatedValue <<= bitsPerChunk;
+            generatedValue |= randDistribution(randIntGenerator);
+        }
+
+        // ensure the candidate number is >= valueLength, if any bits overshoot keep only the lowest bit values
+        std::size_t totalBits = chunks * bitsPerChunk;
+        if (totalBits > valueLength)
+        {
+            boost::multiprecision::cpp_int mask = (boost::multiprecision::cpp_int(1) << valueLength) - 1;
+            generatedValue &= mask;
+        }
+
+        // force the left-most (highest) bit to be 1 to ensure value meets required length
+        generatedValue |= (boost::multiprecision::cpp_int(1) << valueLength - 1);
+
+        // ensure value is odd
+        generatedValue |= 1;
+
+        spdlog::info("[SecretKeyGenerator::getLargeRandomInt] Bounds: {} - {} >> Random int generated (first 10 digits): {}...", lower, upper, generatedValue.str().substr(0, 10));
+        return generatedValue;
     }
 };
 

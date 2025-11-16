@@ -7,12 +7,18 @@
 int main()
 {
     // testing large prime number generation
-    // boost::multiprecision::cpp_int prime64 = SecretKeyGenerator::getPrimeNumber(/*64*/);
-    // boost::multiprecision::cpp_int prime128 = SecretKeyGenerator::getPrimeNumber(128);
-    // boost::multiprecision::cpp_int prime256 = SecretKeyGenerator::getPrimeNumber(256);
-    // boost::multiprecision::cpp_int prime512 = SecretKeyGenerator::getPrimeNumber(512);
-    // boost::multiprecision::cpp_int prime1024 = SecretKeyGenerator::getPrimeNumber(1024);
-    // boost::multiprecision::cpp_int prime2048 = SecretKeyGenerator::getPrimeNumber(2048);
+    // boost::multiprecision::cpp_int prime64 = KeyGenerator::getPrimeNumber(/*64*/);
+    // boost::multiprecision::cpp_int prime128 = KeyGenerator::getPrimeNumber(128);
+    // boost::multiprecision::cpp_int prime256 = KeyGenerator::getPrimeNumber(256);
+    // boost::multiprecision::cpp_int prime512 = KeyGenerator::getPrimeNumber(512);
+    // boost::multiprecision::cpp_int prime1024 = KeyGenerator::getPrimeNumber(1024);
+    // boost::multiprecision::cpp_int prime2048 = KeyGenerator::getPrimeNumber(2048);
 
-    return 0;
+    // testing large random int generation
+    // KeyGenerator::getLargeRandomInt(2, 10);
+    // KeyGenerator::getLargeRandomInt(2, 100);
+    // KeyGenerator::getLargeRandomInt(2, 1000);
+    // KeyGenerator::getLargeRandomInt(2, 10000);
+
+        return 0;
 }
