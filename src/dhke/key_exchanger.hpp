@@ -22,8 +22,7 @@ private:
     enum ExchangeSteps
     {
         START,
-        FIRST_EXCHANGE,
-        SECOND_EXCHANGE,
+        COMPUTE_PUBLIC_KEY,
         FINAL_KEY_GENERATED
     };
     ExchangeSteps currentStep;
@@ -49,10 +48,9 @@ public:
     }
 
     /**
-     * The 'step 1' function performs the initial key swap between Bob and Alice.
-     * We (Bob) combine our secret key with the agreed public parameters.
+     * The 'step 1' function performs the initial combination of the participant's secret key and the public parameters.
      * For public prime = p, generator = g, and private key = a, the following is comupted: g^a mod p
-     * @returns
+     * @returns boost::multiprecision::cpp_int - The resulting combined key
      */
     boost::multiprecision::cpp_int step1()
     {
@@ -63,9 +61,32 @@ public:
             this->privateKey_,
             this->publicPrime_);
 
-        this->currentStep = FIRST_EXCHANGE;
+        // flag first step as being completed
+        this->currentStep = COMPUTE_PUBLIC_KEY;
         spdlog::info("Step 1 value generated for {}: ", this->name_);
         std::cout << value << std::endl;
         return value;
     };
+
+    /**
+     * The 'step 2' function combines the received public key from Alice (which is a combination of the public params and
+     *      Alice's private key), with Bob's (our) secret key
+     * @param publicKey The public key received from the other participant
+     * @returns boost::multiprecision::cpp_int - The final shared secret key
+     */
+    boost::multiprecision::cpp_int step2(boost::multiprecision::cpp_int publicKey)
+    {
+        // for public key = B, private key = a, and public prime = p, to compute the shared secret key (s) we use:
+        //      s = B^a mod p
+        boost::multiprecision::cpp_int sharedSecret = boost::multiprecision::powm(
+            publicKey,
+            this->privateKey_,
+            this->publicPrime_);
+
+        // flag the final step as being completed
+        this->currentStep = FINAL_KEY_GENERATED;
+        spdlog::info("Step 2 shared secret generated for {}: ", this->name_);
+        std::cout << sharedSecret << std::endl;
+        return sharedSecret;
+    }
 };

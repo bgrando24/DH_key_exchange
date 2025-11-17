@@ -32,7 +32,26 @@ int main()
     DHKEParticipant Bob = DHKEParticipant(publicGenerator, prime512, bobPrivateKey, "Bob");
     DHKEParticipant Alice = DHKEParticipant(publicGenerator, prime512, alicePrivateKey, "Alice");
 
-    Bob.step1();
-    Alice.step1();
+    // run step 1 -> public keys generation
+    boost::multiprecision::cpp_int bobStep1 = Bob.step1();
+    boost::multiprecision::cpp_int aliceStep1 = Alice.step1();
+
+    // run step 2 -> swap public keys and compute final shared secret key
+    boost::multiprecision::cpp_int bobStep2 = Bob.step2(aliceStep1);
+    boost::multiprecision::cpp_int aliceStep2 = Alice.step2(bobStep1);
+
+    std::cout << "Bob shared secret:   " << bobStep2 << std::endl;
+    std::cout << "Alice shared secret: " << aliceStep2 << std::endl;
+
+    std::cout << "Are the two shared secrets the same? - ";
+    if (bobStep2 == aliceStep2)
+    {
+        std::cout << "TRUE" << std::endl;
+    }
+    else
+    {
+        std::cout << "FALSE" << std::endl;
+    }
+
     return 0;
 }
