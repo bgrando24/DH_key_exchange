@@ -24,9 +24,9 @@ int main()
     // a small integer (i.e. 2 or 5) is appropriate as the generator
     int publicGenerator = 5;
     // generate required public prime, and private keys
-    boost::multiprecision::cpp_int prime512 = KeyGenerator::getPrimeNumber(512);
-    boost::multiprecision::cpp_int bobPrivateKey = KeyGenerator::getLargeRandomInt(2, 500);
-    boost::multiprecision::cpp_int alicePrivateKey = KeyGenerator::getLargeRandomInt(2, 500);
+    boost::multiprecision::cpp_int prime512 = KeyGenerator::getPrimeNumber(2048);
+    boost::multiprecision::cpp_int bobPrivateKey = KeyGenerator::getLargeRandomInt(2, 2000);
+    boost::multiprecision::cpp_int alicePrivateKey = KeyGenerator::getLargeRandomInt(2, 2000);
 
     // create Alice and Bob
     DHKEParticipant Bob = DHKEParticipant(publicGenerator, prime512, bobPrivateKey, "Bob");
