@@ -54,6 +54,8 @@ public:
      */
     boost::multiprecision::cpp_int step1()
     {
+        spdlog::info("Starting DHKEParticipant step 1...");
+
         // from the Boost documentation: https://www.boost.org/doc/libs/latest/libs/multiprecision/doc/html/boost_multiprecision/tut/gen_int.html
         // for params b,p,m the 'powm' function returns b^p % m
         boost::multiprecision::cpp_int value = boost::multiprecision::powm(
@@ -76,6 +78,8 @@ public:
      */
     boost::multiprecision::cpp_int step2(boost::multiprecision::cpp_int publicKey)
     {
+        spdlog::info("Starting DHKEParticipant step 2...");
+
         // for public key = B, private key = a, and public prime = p, to compute the shared secret key (s) we use:
         //      s = B^a mod p
         boost::multiprecision::cpp_int sharedSecret = boost::multiprecision::powm(

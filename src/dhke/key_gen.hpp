@@ -88,8 +88,12 @@ public:
      */
     static boost::multiprecision::cpp_int getPrimeNumber(size_t bitLength = 64)
     {
+        spdlog::info("Starting KeyGenerator getPrimeNumber...");
+
         boost::multiprecision::cpp_int candidateValue;
         int numbersTested = 0;
+
+        spdlog::info("Starting KeyGenerator getCandidateNumber loop...");
 
         while (true)
         {
@@ -119,6 +123,8 @@ public:
     {
         if (lower > 2)
             throw std::invalid_argument("Argument 'lower' must be >= 2");
+
+        spdlog::info("Starting KeyGenerator getLargeRandomInt...");
 
         // set up random number generation
         std::random_device rd;
