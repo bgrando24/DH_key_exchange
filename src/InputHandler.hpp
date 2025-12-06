@@ -43,6 +43,8 @@ public:
 
     /**
      * Get user integer input, does not continue until the user enter's a valid integer value
+     * @param prompt (OPTIONAL) The prompt to display before accepting input
+     * @param errorMsg (OPTIONAL) Error message to display if an incorrect input is received
      * @returns The user's input as an int
      */
     static int getIntInput(const std::string &prompt = "", const std::string errorMsg = "")
@@ -64,6 +66,42 @@ public:
             {
                 int value = std::stoi(raw);
                 return value;
+            }
+            catch (...)
+            {
+            }
+
+            std::cout << (errorMsg.empty() ? "Invalid option, try again." : errorMsg) << std::endl;
+        }
+    }
+
+    /**
+     * Get user integer input within a range, does not continue until the user enter's a valid integer value
+     * @param minVal, maxVal The minimum/maximum bounds for integer input, inclusive
+     * @param prompt (OPTIONAL) The prompt to display before accepting input
+     * @param errorMsg (OPTIONAL) Error message to display if an incorrect input is received
+     * @returns The user's input as an int
+     */
+    static int getIntInput(int minVal, int maxVal, const std::string &prompt = "", const std::string errorMsg = "")
+    {
+        // prompt user if applicable
+        if (!prompt.empty())
+        {
+            std::cout << prompt << std::endl;
+        }
+
+        // read user input, continue if not valid integer
+        while (true)
+        {
+            std::cout << prompt;
+            std::string raw;
+            std::getline(std::cin, raw);
+
+            try
+            {
+                int value = std::stoi(raw);
+                if (value <= maxVal && value >= minVal)
+                    return value;
             }
             catch (...)
             {

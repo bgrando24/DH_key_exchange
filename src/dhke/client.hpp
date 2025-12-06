@@ -64,23 +64,36 @@ public:
         this->remotePeerPort_ = remotePeerPort;
     }
 
-    void showMenu()
+    /**
+     * Runs through getting the user's listening port, and getting the remote peer's host addr
+     */
+    void init()
     {
-        std::cout << "---------- MENU ----------" << std::endl;
-        switch (this->mode)
+        while (true)
         {
-        case CurrentMode::LISTEN_PORT_REQUIRED:
-            /* code */
-            break;
+            // get values
+            this->userListeningPort_ = InputHandler::getIntInput(3000, 4000, "Enter the port number you wish to listen on, between 3000 and 4000: ");
+            this->remotePeerHost_ = InputHandler::getLineInput("Enter the host address of the remote peer to connect with: ");
+            this->remotePeerPort_ = InputHandler::getIntInput(3000, 4000, "Enter the port number for the remote peer, between 3000 and 4000: ");
 
-        default:
-            break;
+            std::cout << "----- The following configuration is active -----" << std::endl;
+            std::cout << "Your listening port: " << this->userListeningPort_ << std::endl;
+            std::cout << "Remote peer address: " << this->remotePeerHost_ << ":" << this->remotePeerPort_ << std::endl;
+            std::cout << "----------\n"
+                      << std::endl;
+            std::string answer;
+            while (true)
+            {
+                answer = InputHandler::getLineInput("Do you wish to proceed (Y/N)?");
+                if (answer == "y" || answer == "Y" || answer == "n" || answer == "N")
+                    break;
+            }
+
+            if (answer == "y" || answer == "Y")
+                break;
         }
-        // if (this->mode == CurrentMode::LISTEN_PORT_REQUIRED)
-        // {
-        //     std::cout << "[1] Enter your listening port" << std::endl;
-        // }
-        // std::cout << "[1] " << std::endl;
+
+        spdlog::info("");
     }
 
     // -------------- GETTERS --------------
