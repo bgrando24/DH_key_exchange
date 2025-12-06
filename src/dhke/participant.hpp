@@ -9,7 +9,7 @@
 /**
  * The DHKEParticipant class handles functionality required for a client to participate in the DHKE process.
  *
- * Throughout the comments for this class, the pseudonyms Bob and Alice will be used.
+ * Throughout the comments for this class, the pseudonyms 'Bob' and 'Alice' are be used.
  *  Bob will refer to 'this' current instance (us), and Alice will refer to the other participant we intend to communicate with.
  */
 class DHKEParticipant
