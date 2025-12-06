@@ -19,9 +19,21 @@ class DHKEClient : public DHKEParticipant
 private:
     // remote peer host address
     std::string remotePeerHost_;
-    std::string remotePeerPort_;
+    int remotePeerPort_;
     // user's port to listen on
-    std::string userListeningPort_;
+    int userListeningPort_;
+
+    enum CurrentMode
+    {
+        LISTEN_PORT_REQUIRED,      // User's listening port not yet provided
+        REMOTE_PEER_ADDR_REQUIRED, // Remote peer's host addr and port number not specified yet
+        KEY_EXCHANGE_READY,        // Above details are known but awaiting user to confirm proceeding
+        USER_READY,                // User flagged themselves as ready for exchange
+        DHKE_ACTIVE,               // Key exchange actively happening
+        CHAT,                      // Keys exchanged, client moved into chat mode
+        DEMO                       // (TBA) demo mode
+    };
+    CurrentMode mode;
 
 public:
     std::string name;
@@ -42,14 +54,65 @@ public:
      */
     DHKEClient(
         std::string name,
-        std::string listeningPort,
+        int listeningPort,
         std::string remotePeerHost,
-        std::string remotePeerPort) : DHKEParticipant(name)
+        int remotePeerPort) : DHKEParticipant(name)
     {
         this->name = name;
         this->userListeningPort_ = listeningPort;
         this->remotePeerHost_ = remotePeerHost;
         this->remotePeerPort_ = remotePeerPort;
+    }
+
+    void showMenu()
+    {
+        std::cout << "---------- MENU ----------" << std::endl;
+        switch (this->mode)
+        {
+        case CurrentMode::LISTEN_PORT_REQUIRED:
+            /* code */
+            break;
+
+        default:
+            break;
+        }
+        // if (this->mode == CurrentMode::LISTEN_PORT_REQUIRED)
+        // {
+        //     std::cout << "[1] Enter your listening port" << std::endl;
+        // }
+        // std::cout << "[1] " << std::endl;
+    }
+
+    // -------------- GETTERS --------------
+    std::string getRemotePeerHost()
+    {
+        return this->remotePeerHost_;
+    }
+
+    int getRemotePeerPort()
+    {
+        return this->remotePeerPort_;
+    }
+
+    int getListeningPort()
+    {
+        return this->userListeningPort_;
+    }
+
+    // -------------- SETTERS --------------
+    void setRemotePeerHost(std::string address)
+    {
+        this->remotePeerHost_ = address;
+    }
+
+    void setRemotePeerPort(int port)
+    {
+        this->remotePeerPort_ = port;
+    }
+
+    void setListeningPort(int port)
+    {
+        this->userListeningPort_ = port;
     }
 };
 

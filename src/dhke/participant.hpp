@@ -25,14 +25,6 @@ private:
     boost::multiprecision::cpp_int sharedSecretKey;
     // name of participant, for observation purposes
     std::string name_;
-    // this tracks what step of the key exchange the participant is on
-    enum ExchangeSteps
-    {
-        START,
-        COMPUTE_PUBLIC_KEY,
-        FINAL_KEY_GENERATED
-    };
-    ExchangeSteps currentStep;
 
 public:
     /**
@@ -59,8 +51,6 @@ public:
         this->publicPrime_ = publicPrime;
         this->privateKey_ = privateKey;
         this->name_ = name;
-        // flag that the required participant parameters are ready
-        currentStep = ExchangeSteps::START;
     }
 
     // getter for intermediary key generated in step 1
@@ -111,8 +101,6 @@ public:
             this->privateKey_,
             this->publicPrime_);
 
-        // flag first step as being completed
-        this->currentStep = COMPUTE_PUBLIC_KEY;
         spdlog::info("Step 1 value generated for {}: ", this->name_);
         std::cout << value << std::endl;
         // store value in 'this' object's state
@@ -137,8 +125,6 @@ public:
             this->privateKey_,
             this->publicPrime_);
 
-        // flag the final step as being completed
-        this->currentStep = FINAL_KEY_GENERATED;
         spdlog::info("Step 2 shared secret generated for {}: ", this->name_);
         std::cout << sharedSecret << std::endl;
         // store shared secret in 'this' object's state
