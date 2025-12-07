@@ -12,6 +12,8 @@ include(CTest)
 find_package(spdlog CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(doctest CONFIG REQUIRED)
+find_package(asio CONFIG REQUIRED)
+find_package(Threads REQUIRED)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -30,6 +32,8 @@ add_executable(app src/main.cpp)
 target_link_libraries(app PRIVATE
   spdlog::spdlog
   nlohmann_json::nlohmann_json
+  asio::asio
+  Threads::Threads
 )
 
 # doctest executable 

@@ -21,7 +21,7 @@ private:
   boost::multiprecision::cpp_int sharedSecretKey;
 
 public:
-  DHKEContextManager(DHKEParticipant bob, DHKEParticipant alice)
+  DHKEContextManager(DHKEParticipant &bob, DHKEParticipant &alice)
   {
     this->bob = &bob;
     this->alice = &alice;
