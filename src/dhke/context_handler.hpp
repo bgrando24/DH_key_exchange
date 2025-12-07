@@ -43,10 +43,10 @@ public:
 
     // give participants the generator and prime
     this->bob->setPublicGenerator(this->publicGenerator);
-    this->bob->setPublicPrime(this->publicGenerator);
+    this->bob->setPublicPrime(this->publicPrime);
 
     this->alice->setPublicGenerator(this->publicGenerator);
-    this->alice->setPublicPrime(this->publicGenerator);
+    this->alice->setPublicPrime(this->publicPrime);
 
     // generate secret keys
     this->bob->setPrivateKey(KeyGenerator::getLargeRandomInt(2, bitLength - 1));
