@@ -35,7 +35,7 @@ public:
         // prompt user if applicable
         if (!prompt.empty())
         {
-            std::cout << prompt << std::endl;
+            std::cout << prompt;
         }
         // capture input
         return InputHandler::readLineInput();
@@ -49,16 +49,14 @@ public:
      */
     static int getIntInput(const std::string &prompt = "", const std::string errorMsg = "")
     {
-        // prompt user if applicable
-        if (!prompt.empty())
-        {
-            std::cout << prompt << std::endl;
-        }
-
         // read user input, continue if not valid integer
         while (true)
         {
-            std::cout << prompt;
+            // prompt user if applicable
+            if (!prompt.empty())
+            {
+                std::cout << prompt;
+            }
             std::string raw;
             std::getline(std::cin, raw);
 
@@ -84,16 +82,14 @@ public:
      */
     static int getIntInput(int minVal, int maxVal, const std::string &prompt = "", const std::string errorMsg = "")
     {
-        // prompt user if applicable
-        if (!prompt.empty())
-        {
-            std::cout << prompt << std::endl;
-        }
-
         // read user input, continue if not valid integer
         while (true)
         {
-            std::cout << prompt;
+            // prompt user if applicable
+            if (!prompt.empty())
+            {
+                std::cout << prompt;
+            }
             std::string raw;
             std::getline(std::cin, raw);
 

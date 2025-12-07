@@ -65,6 +65,16 @@ public:
     }
 
     /**
+     * Debugging function to print out the current state of the client
+     */
+    void printState()
+    {
+        std::cout << "Name: " << this->name << std::endl;
+        std::cout << "Listening Port: " << this->userListeningPort_ << std::endl;
+        std::cout << "Remote peer address: " << this->remotePeerHost_ << ":" << this->remotePeerPort_ << std::endl;
+    }
+
+    /**
      * Runs through getting the user's listening port, and getting the remote peer's host addr
      */
     void init()
@@ -93,7 +103,9 @@ public:
                 break;
         }
 
-        spdlog::info("");
+        this->mode = CurrentMode::KEY_EXCHANGE_READY;
+
+        // spdlog::info("[DHKEClient] init() - Values provided: ");
     }
 
     // -------------- GETTERS --------------
