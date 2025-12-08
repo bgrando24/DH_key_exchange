@@ -7,6 +7,9 @@
 #include "dhke/client.hpp"
 #include "dhke/context_handler.hpp"
 
+/**
+ * Prints help info for each application mode
+ */
 void printNetworkUsage()
 {
     std::cout << "Network mode usage:\n";
@@ -25,10 +28,12 @@ int main(int argc, char *argv[])
     if (argc >= 2)
     {
         std::string role = argv[1];
+        // if listener mode, grab the relevant args and start listening
         if (role == "listen")
         {
             if (argc != 6)
             {
+                // display help info
                 printNetworkUsage();
                 return 1;
             }
@@ -39,13 +44,16 @@ int main(int argc, char *argv[])
             int listenPort = std::stoi(argv[4]);
             std::string authSecret = argv[5];
             DHKEClient listener(name, listenPort, "localhost", 0);
+            // start listener handshake -> blocking call that waits for peer connection
             bool ok = listener.performListenerHandshake(authSecret, expectedPeerName);
             return ok ? 0 : 1;
         }
+        // in connector mode, grab the relevant args and attempt to connect to the listener
         else if (role == "connect")
         {
             if (argc != 8)
             {
+                // display help info
                 printNetworkUsage();
                 return 1;
             }
@@ -62,6 +70,7 @@ int main(int argc, char *argv[])
         }
         else
         {
+            // fallback: display help info
             printNetworkUsage();
             return 1;
         }

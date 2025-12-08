@@ -24,17 +24,17 @@ private:
     // user's port to listen on
     int userListeningPort_;
 
-    enum CurrentMode
-    {
-        LISTEN_PORT_REQUIRED,      // User's listening port not yet provided
-        REMOTE_PEER_ADDR_REQUIRED, // Remote peer's host addr and port number not specified yet
-        KEY_EXCHANGE_READY,        // Above details are known but awaiting user to confirm proceeding
-        USER_READY,                // User flagged themselves as ready for exchange
-        DHKE_ACTIVE,               // Key exchange actively happening
-        CHAT,                      // Keys exchanged, client moved into chat mode
-        DEMO                       // (TBA) demo mode
-    };
-    CurrentMode mode;
+    // enum CurrentMode
+    // {
+    //     LISTEN_PORT_REQUIRED,      // User's listening port not yet provided
+    //     REMOTE_PEER_ADDR_REQUIRED, // Remote peer's host addr and port number not specified yet
+    //     KEY_EXCHANGE_READY,        // Above details are known but awaiting user to confirm proceeding
+    //     USER_READY,                // User flagged themselves as ready for exchange
+    //     DHKE_ACTIVE,               // Key exchange actively happening
+    //     CHAT,                      // Keys exchanged, client moved into chat mode
+    //     DEMO                       // (TBA) demo mode
+    // };
+    // CurrentMode mode;
 
     /**
      * Helper method to format the payload sent over the P2P communication
@@ -70,22 +70,48 @@ private:
     static std::string computeMac(const std::string &secret, const std::string &payload)
     {
         std::hash<std::string> hasher;
-        // ostringstream makes it easier to build the hex string, rather than string concatenation
         std::ostringstream oss;
+        /**
+         * What's happening below:
+         *  1. 'oss' is essentially the buffer we want to write our data to. In C++, the stream insertion operator, "<<"
+         *           allows for passing data into a stream buffer object
+         *  2. 'std::hex' is an I/O manipulator, meaning it converts any supplied data into hexadecimal base
+         *  3. The hasher() function uses std::hash, which computes a hash of the supplied data, in our case the secret and the payload concatenated
+         *
+         * In summary: hashed secret + payload value -> converted into hexadecimal -> passed into the buffer, then returned as a regular string value
+         */
         oss << std::hex << hasher(secret + "|" + payload);
         return oss.str();
     }
 
+    /**
+     * Helper method to derive and format the confirmation tag for the key exchange
+     * @param shared The shared secret
+     * @param role The participant's role in the exchange (LISTENER or CONNECTOR)
+     * @param self The participant's identity
+     * @param peer The peer's identity
+     * @returns The confirmation tag as a hexadecimal string
+     */
     static std::string deriveConfirmTag(const boost::multiprecision::cpp_int &shared, const std::string &role, const std::string &self, const std::string &peer)
     {
         return computeMac(shared.str(), "CONFIRM|" + role + "|" + self + "|" + peer);
     }
 
+    /**
+     * Helper method to derive session MAC key from the shared secret
+     * @param shared The shared secret
+     * @returns The session key as a hexadecimal string
+     */
     static std::string deriveSessionKey(const boost::multiprecision::cpp_int &shared)
     {
         return computeMac(shared.str(), "SESSION_KEY");
     }
 
+    /**
+     * Helper method to create a shortened hash representation of a big integer
+     * @param value The big integer value
+     * @returns The shortened hash as a hexadecimal string
+     */
     static std::string shortHash(const boost::multiprecision::cpp_int &value)
     {
         std::hash<std::string> hasher;
@@ -94,7 +120,12 @@ private:
         return oss.str();
     }
 
-    // Toy XOR cipher for demo purposes. Replace with a real cipher for strong confidentiality.
+    /**
+     * Simple XOR cipher for demonstration purposes, uses the provided key to XOR the data
+     * @param data The data to perform XOR on
+     * @param key The key used for XOR operation
+     * @returns The XOR result
+     */
     static std::string xorWithKey(const std::string &data, const std::string &key)
     {
         if (key.empty())
@@ -107,38 +138,64 @@ private:
         return out;
     }
 
+    /**
+     * Encodes string data into hexadecimal representation
+     * @param data The data to encode
+     * @returns The hex-encoded string
+     */
     static std::string hexEncode(const std::string &data)
     {
-        static const char *hex = "0123456789abcdef";
+        static const char *hex = "0123456789abcdef"; // valid hex characters
         std::string out;
+        // one hex character represents 4 bits, so each full byte requires two hex characters, hence reserving double the memory size of 'data'
         out.reserve(data.size() * 2);
         for (unsigned char c : data)
         {
+            // shift right by 4 bits to get the first hex digit, and bitwise AND with 0x0F to get the second hex digit
             out.push_back(hex[c >> 4]);
             out.push_back(hex[c & 0x0F]);
         }
         return out;
     }
 
+    /**
+     * Decodes a hex-encoded string back into its original representation
+     * @param hexData The hex-encoded string
+     * @returns The decoded string
+     */
     static std::string hexDecode(const std::string &hexData)
     {
         if (hexData.size() % 2 != 0)
             throw std::invalid_argument("Invalid hex length");
         std::string out;
+        // opposite of above, each pair of hex characters represents one byte, so only need half the memory size
         out.reserve(hexData.size() / 2);
         for (size_t i = 0; i < hexData.size(); i += 2)
         {
+            // the stoul function converts a substring of two hex characters into an unsigned long integer, base 16
+            // we then static_cast it to a char and append to the output string -> giving us the original string value
             unsigned int byte = std::stoul(hexData.substr(i, 2), nullptr, 16);
             out.push_back(static_cast<char>(byte));
         }
         return out;
     }
 
+    /**
+     * Helper method for sending a line over ASIO network socket
+     * @param socket The ASIO TCP socket object
+     * @param line The string to send
+     */
     static void sendLine(asio::ip::tcp::socket &socket, const std::string &line)
     {
         asio::write(socket, asio::buffer(line + "\n"));
     }
 
+    /**
+     * Helper method for reading a line from ASIO network socket, delimited by a newline character
+     * @param socket The ASIO TCP socket object
+     * @param buffer The ASIO stream buffer to read into -> where to store the data temporarily
+     * @returns The read line as a string
+     */
     static std::string readLine(asio::ip::tcp::socket &socket, asio::streambuf &buffer)
     {
         asio::read_until(socket, buffer, "\n");
@@ -148,23 +205,39 @@ private:
         return line;
     }
 
+    /**
+     * Validates the DHKE parameters received from the peer. Checks the following conditions:
+     *
+     * - Prime number is > 3 and odd
+     *
+     * - Prime number passes Miller-Rabin primality test
+     *
+     * - Generator is > 1 and < prime
+     *
+     * - Peer public key is > 1 and < (prime - 1)
+     *
+     * @param prime The public prime number
+     * @param generator The public generator
+     * @param peerPartial The peer's public key
+     * @returns True if parameters are valid, false otherwise
+     */
     static bool validateParameters(const boost::multiprecision::cpp_int &prime,
                                    int generator,
-                                   const boost::multiprecision::cpp_int &peerPublic)
+                                   const boost::multiprecision::cpp_int &peerPartial)
     {
-        // prime sanity and probabilistic primality
         if (prime <= 3 || (prime & 1) == 0)
             return false;
         if (!boost::multiprecision::miller_rabin_test(prime, 10))
             return false;
         if (generator <= 1 || generator >= prime)
             return false;
-        if (peerPublic <= 1 || peerPublic >= (prime - 1))
+        if (peerPartial <= 1 || peerPartial >= (prime - 1))
             return false;
         return true;
     }
 
 public:
+    // user's name
     std::string name;
 
     /**
@@ -206,34 +279,34 @@ public:
     /**
      * Runs through getting the user's listening port, and getting the remote peer's host addr
      */
-    void init()
-    {
-        while (true)
-        {
-            // get values
-            this->userListeningPort_ = InputHandler::getIntInput(3000, 4000, "Enter the port number you wish to listen on, between 3000 and 4000: ");
-            this->remotePeerHost_ = InputHandler::getLineInput("Enter the host address of the remote peer to connect with: ");
-            this->remotePeerPort_ = InputHandler::getIntInput(3000, 4000, "Enter the port number for the remote peer, between 3000 and 4000: ");
+    // void init()
+    // {
+    //     while (true)
+    //     {
+    //         // get values
+    //         this->userListeningPort_ = InputHandler::getIntInput(3000, 4000, "Enter the port number you wish to listen on, between 3000 and 4000: ");
+    //         this->remotePeerHost_ = InputHandler::getLineInput("Enter the host address of the remote peer to connect with: ");
+    //         this->remotePeerPort_ = InputHandler::getIntInput(3000, 4000, "Enter the port number for the remote peer, between 3000 and 4000: ");
 
-            std::cout << "----- The following configuration is active -----" << std::endl;
-            std::cout << "Your listening port: " << this->userListeningPort_ << std::endl;
-            std::cout << "Remote peer address: " << this->remotePeerHost_ << ":" << this->remotePeerPort_ << std::endl;
-            std::cout << "----------\n"
-                      << std::endl;
-            std::string answer;
-            while (true)
-            {
-                answer = InputHandler::getLineInput("Do you wish to proceed (Y/N)?");
-                if (answer == "y" || answer == "Y" || answer == "n" || answer == "N")
-                    break;
-            }
+    //         std::cout << "----- The following configuration is active -----" << std::endl;
+    //         std::cout << "Your listening port: " << this->userListeningPort_ << std::endl;
+    //         std::cout << "Remote peer address: " << this->remotePeerHost_ << ":" << this->remotePeerPort_ << std::endl;
+    //         std::cout << "----------\n"
+    //                   << std::endl;
+    //         std::string answer;
+    //         while (true)
+    //         {
+    //             answer = InputHandler::getLineInput("Do you wish to proceed (Y/N)?");
+    //             if (answer == "y" || answer == "Y" || answer == "n" || answer == "N")
+    //                 break;
+    //         }
 
-            if (answer == "y" || answer == "Y")
-                break;
-        }
+    //         if (answer == "y" || answer == "Y")
+    //             break;
+    //     }
 
-        this->mode = CurrentMode::KEY_EXCHANGE_READY;
-    }
+    //     this->mode = CurrentMode::KEY_EXCHANGE_READY;
+    // }
 
     // -------------- GETTERS --------------
     std::string getRemotePeerHost()
@@ -268,7 +341,18 @@ public:
     }
 
     /**
-     * Runs the DHKE handshake as the listening peer. A minimal MAC is used to demonstrate authentication.
+     * Performs the listener side of the DHKE handshake over the network. For the listener specifically, this involves:
+     *
+     * - 1. Waiting for a connection from the connector, then generating the DHKE parameters (prime, generator, private key), and computing the partial key
+     *
+     * - 2. Sending the partial key to the connector, and receiving the connector's partial key
+     *
+     * - 3. Computing the shared secret, and confirming it with the connector
+     *
+     * @param authSecret The shared authentication secret for MAC computation
+     * @param expectedPeerId The expected identity of the remote peer
+     * @param primeBitLength The bit length for the generated prime number (default: 512)
+     * @returns True if handshake successful, false otherwise
      */
     bool performListenerHandshake(const std::string &authSecret, const std::string &expectedPeerId, size_t primeBitLength = 512)
     {
@@ -284,16 +368,19 @@ public:
             acceptor.accept(socket);
             spdlog::info("[{}] Peer connected", this->name);
 
-            // generate parameters
+            // generate parameters: prime, generator, private key, public key
             auto prime = KeyGenerator::getPrimeNumber(primeBitLength);
             int generator = KeyGenerator::getLargeRandomInt(1, 10) % 2 == 0 ? 2 : 5;
             this->setPublicPrime(prime);
             this->setPublicGenerator(generator);
             this->setPrivateKey(KeyGenerator::getLargeRandomInt(2, primeBitLength - 1));
+
+            // perform step 1 to get the partial key
             auto myPublic = this->step1();
 
-            // send initial message
+            // send initial message to connector
             auto macPayload = buildPayload(prime, generator, myPublic, "LISTENER", this->name, expectedPeerId);
+            // compute MAC, send data in expected format to connector
             auto mac = computeMac(authSecret, macPayload);
             sendLine(socket, "ID:" + this->name);
             sendLine(socket, "P:" + prime.str());
@@ -303,17 +390,18 @@ public:
 
             // receive peer response
             asio::streambuf buffer;
-            boost::multiprecision::cpp_int peerPublic;
+            boost::multiprecision::cpp_int peerPartial;
             std::string peerMac;
             std::string peerId;
             std::string peerConfirm;
 
+            // expecting 4 lines: PUB, MAC, ID, CONFIRM
             for (int i = 0; i < 4; ++i)
             {
                 std::string line = readLine(socket, buffer);
                 if (line.rfind("PUB:", 0) == 0)
                 {
-                    peerPublic = boost::multiprecision::cpp_int(line.substr(4));
+                    peerPartial = boost::multiprecision::cpp_int(line.substr(4));
                 }
                 else if (line.rfind("MAC:", 0) == 0)
                 {
@@ -329,6 +417,7 @@ public:
                 }
             }
 
+            // check received data
             if (peerMac.empty())
             {
                 spdlog::error("[{}] Missing MAC from peer", this->name);
@@ -340,20 +429,21 @@ public:
                 return false;
             }
 
-            auto expectedMac = computeMac(authSecret, buildPayload(prime, generator, peerPublic, "CONNECTOR", peerId, this->name));
+            auto expectedMac = computeMac(authSecret, buildPayload(prime, generator, peerPartial, "CONNECTOR", peerId, this->name));
             if (peerMac != expectedMac)
             {
                 spdlog::error("[{}] MAC mismatch, aborting handshake", this->name);
                 return false;
             }
 
-            if (!validateParameters(prime, generator, peerPublic))
+            if (!validateParameters(prime, generator, peerPartial))
             {
                 spdlog::error("[{}] Parameter validation failed", this->name);
                 return false;
             }
 
-            auto shared = this->step2(peerPublic);
+            // now perform step 2 to compute the complete shared secret, using the peer's partial key
+            auto shared = this->step2(peerPartial);
             spdlog::info("[{}] Shared secret hash: {}", this->name, shortHash(shared));
 
             // confirm peer knows the shared secret
@@ -363,10 +453,13 @@ public:
                 spdlog::error("[{}] Confirmation tag mismatch", this->name);
                 return false;
             }
+            // send our confirmation tag back to the connector
             auto myConfirm = deriveConfirmTag(shared, "LISTENER", this->name, peerId);
             sendLine(socket, "CONFIRM:" + myConfirm);
 
-            // demo encrypted message exchange
+            // demonstration of encrypted message exchange: send and receive two messages
+            // this is to show that both parties have derived the same session key from the shared secret, and can encrypt/decrypt communications successfully
+            // this uses the simplified XOR cipher
             auto sessionKey = deriveSessionKey(shared);
             std::string msg1 = "Hello from " + this->name + " (listener)";
             sendLine(socket, "ENC:" + hexEncode(xorWithKey(msg1, sessionKey)));
@@ -399,7 +492,20 @@ public:
     }
 
     /**
-     * Runs the DHKE handshake as the connecting peer.
+     * Performs the connector side of the DHKE handshake over the network. For the connector specifically, this involves:
+     *
+     * - 1. Connecting to the listener peer
+     *
+     * - 2. Receiving the listener's parameters and partial key
+     *
+     * - 3. Sending the connector's partial key
+     *
+     * - 4. Computing the shared secret, and confirming it with the listener
+     *
+     * @param authSecret The shared authentication secret for MAC computation
+     * @param expectedPeerId The expected identity of the remote peer
+     * @param primeBitLength The bit length for the generated prime number (default: 512)
+     * @returns True if handshake successful, false otherwise
      */
     bool performConnectorHandshake(const std::string &authSecret, const std::string &expectedPeerId, size_t primeBitLength = 512)
     {
@@ -408,6 +514,7 @@ public:
 
         try
         {
+            // set up asio networking context
             asio::io_context io;
             tcp::socket socket(io);
             tcp::resolver resolver(io);
@@ -419,10 +526,11 @@ public:
             asio::streambuf buffer;
             boost::multiprecision::cpp_int prime;
             int generator = 0;
-            boost::multiprecision::cpp_int peerPublic;
+            boost::multiprecision::cpp_int peerPartial;
             std::string peerMac;
             std::string peerId;
 
+            // expecting 5 lines: P, G, PUB, MAC, ID
             for (int i = 0; i < 5; ++i)
             {
                 std::string line = readLine(socket, buffer);
@@ -436,7 +544,7 @@ public:
                 }
                 else if (line.rfind("PUB:", 0) == 0)
                 {
-                    peerPublic = boost::multiprecision::cpp_int(line.substr(4));
+                    peerPartial = boost::multiprecision::cpp_int(line.substr(4));
                 }
                 else if (line.rfind("MAC:", 0) == 0)
                 {
@@ -448,6 +556,7 @@ public:
                 }
             }
 
+            // check received data
             if (peerMac.empty())
             {
                 spdlog::error("[{}] Missing MAC from listener", this->name);
@@ -459,33 +568,37 @@ public:
                 return false;
             }
 
-            auto expectedMac = computeMac(authSecret, buildPayload(prime, generator, peerPublic, "LISTENER", peerId, this->name));
+            auto expectedMac = computeMac(authSecret, buildPayload(prime, generator, peerPartial, "LISTENER", peerId, this->name));
             if (peerMac != expectedMac)
             {
                 spdlog::error("[{}] MAC mismatch, aborting handshake", this->name);
                 return false;
             }
 
-            if (!validateParameters(prime, generator, peerPublic))
+            if (!validateParameters(prime, generator, peerPartial))
             {
                 spdlog::error("[{}] Parameter validation failed", this->name);
                 return false;
             }
 
-            // generate our side
+            // receive parameters from listener, now generate our own parameters via 'step1()'
             this->setPublicPrime(prime);
             this->setPublicGenerator(generator);
             this->setPrivateKey(KeyGenerator::getLargeRandomInt(2, primeBitLength - 1));
             auto myPublic = this->step1();
 
+            // send MAC + partial key response to listener
             auto macPayload = buildPayload(prime, generator, myPublic, "CONNECTOR", this->name, peerId);
             auto mac = computeMac(authSecret, macPayload);
             sendLine(socket, "ID:" + this->name);
             sendLine(socket, "PUB:" + myPublic.str());
             sendLine(socket, "MAC:" + mac);
-            auto shared = this->step2(peerPublic);
+
+            // compute shared secret using listener's partial key
+            auto shared = this->step2(peerPartial);
             spdlog::info("[{}] Shared secret hash: {}", this->name, shortHash(shared));
             auto myConfirm = deriveConfirmTag(shared, "CONNECTOR", this->name, peerId);
+            // confirm with listener
             sendLine(socket, "CONFIRM:" + myConfirm);
 
             // receive confirmation from listener
