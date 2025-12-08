@@ -1,5 +1,0 @@
--   [ ] Add support for CLI arguments for bit length of keys, or even CLI interaction
--   [ ] Figure out what symmetric encryption to use for demo
--   [ ] Build wrapper class for handling the key exchange between two participants
--   [ ] Figure out how to perform the actual public key exchange over network (asio)
--   [ ] Add demonstration encrypted communication between participants using key -> in wrapper class?

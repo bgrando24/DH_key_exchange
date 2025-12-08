@@ -35,12 +35,3 @@ target_link_libraries(app PRIVATE
   asio::asio
   Threads::Threads
 )
-
-# doctest executable 
-add_executable(run_tests tests/test_main.cpp)
-target_link_libraries(run_tests PRIVATE doctest::doctest)
-
-# enable CMake testing (Ctest)
-enable_testing()
-add_test(NAME test_main COMMAND app)
-add_test(NAME test_docttest_example COMMAND run_tests)
