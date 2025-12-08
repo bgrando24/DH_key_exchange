@@ -5,7 +5,6 @@
 #include "dhke/key_gen.hpp"
 #include "dhke/participant.hpp"
 #include "dhke/client.hpp"
-#include "dhke/context_handler.hpp"
 
 const int PRIME_BIT_LENGTH = 512;
 
