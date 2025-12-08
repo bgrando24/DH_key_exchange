@@ -7,6 +7,8 @@
 #include "dhke/client.hpp"
 #include "dhke/context_handler.hpp"
 
+const int PRIME_BIT_LENGTH = 512;
+
 /**
  * Prints help info for each application mode
  */
@@ -45,7 +47,7 @@ int main(int argc, char *argv[])
             std::string authSecret = argv[5];
             DHKEClient listener(name, listenPort, "localhost", 0);
             // start listener handshake -> blocking call that waits for peer connection
-            bool ok = listener.performListenerHandshake(authSecret, expectedPeerName);
+            bool ok = listener.performListenerHandshake(authSecret, expectedPeerName, PRIME_BIT_LENGTH);
             return ok ? 0 : 1;
         }
         // in connector mode, grab the relevant args and attempt to connect to the listener
@@ -65,7 +67,7 @@ int main(int argc, char *argv[])
             int peerPort = std::stoi(argv[6]);
             std::string authSecret = argv[7];
             DHKEClient connector(name, listenPort, peerHost, peerPort);
-            bool ok = connector.performConnectorHandshake(authSecret, expectedPeerName);
+            bool ok = connector.performConnectorHandshake(authSecret, expectedPeerName, PRIME_BIT_LENGTH);
             return ok ? 0 : 1;
         }
         else

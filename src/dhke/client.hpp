@@ -457,6 +457,7 @@ public:
                 spdlog::error("[{}] Expected encrypted reply", this->name);
                 return false;
             }
+            spdlog::info("[{}] Encrypted reply: {}", this->name, encReply1);
             std::string reply1 = xorWithKey(hexDecode(encReply1.substr(4)), sessionKey);
             spdlog::info("[{}] Decrypted reply: {}", this->name, reply1);
 
@@ -468,6 +469,7 @@ public:
                 spdlog::error("[{}] Expected second encrypted reply", this->name);
                 return false;
             }
+            spdlog::info("[{}] Encrypted second reply: {}", this->name, encReply2);
             std::string reply2 = xorWithKey(hexDecode(encReply2.substr(4)), sessionKey);
             spdlog::info("[{}] Decrypted second reply: {}", this->name, reply2);
             return true;
