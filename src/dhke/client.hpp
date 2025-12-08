@@ -24,18 +24,6 @@ private:
     // user's port to listen on
     int userListeningPort_;
 
-    // enum CurrentMode
-    // {
-    //     LISTEN_PORT_REQUIRED,      // User's listening port not yet provided
-    //     REMOTE_PEER_ADDR_REQUIRED, // Remote peer's host addr and port number not specified yet
-    //     KEY_EXCHANGE_READY,        // Above details are known but awaiting user to confirm proceeding
-    //     USER_READY,                // User flagged themselves as ready for exchange
-    //     DHKE_ACTIVE,               // Key exchange actively happening
-    //     CHAT,                      // Keys exchanged, client moved into chat mode
-    //     DEMO                       // (TBA) demo mode
-    // };
-    // CurrentMode mode;
-
     /**
      * Helper method to format the payload sent over the P2P communication
      * @param prime The public prime number
